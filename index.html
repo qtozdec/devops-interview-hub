@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Middle Interview 2025 - Interactive Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Slate & Indigo (Neutral Background, Professional Accents) -->
+    <!-- Application Structure Plan: 
+         1. Dashboard: High-level metrics (Category distribution, Difficulty levels) to give the user a scope of the material.
+         2. Explorer (Main View): A filterable list of all 100 questions. Accordion interaction to reveal answers keeps the UI clean and encourages active recall.
+         3. Flashcards (Training): A focused mode to simulate an interview setting (random question selection).
+         4. Data Model: 100 Questions hardcoded in a JS array with metadata (Category, Difficulty, Question, Answer Key).
+    -->
+    
+    <!-- Visualization & Content Choices:
+         - Category Distribution (Doughnut Chart): Shows the weight of different topics (e.g., K8s vs Linux) in a typical interview.
+         - Difficulty Breakdown (Bar Chart): Visualizes the balance between Core, Advanced, and Architectural questions.
+         - Interaction: Vanilla JS used for instant filtering and state management (toggle answers, random selection).
+         - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Slate 100 */
+            color: #1e293b; /* Slate 800 */
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px; /* Constraint width */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 350px;
+            }
+        }
+
+        /* Custom Utilities */
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
+        }
+        
+        .answer-hidden {
+            display: none;
+        }
+        .answer-visible {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Difficulty Badges */
+        .badge-easy { background-color: #dcfce7; color: #166534; } /* Green */
+        .badge-medium { background-color: #e0f2fe; color: #075985; } /* Blue */
+        .badge-hard { background-color: #fee2e2; color: #991b1b; } /* Red */
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">🚀</span>
+                <h1 class="text-xl font-bold tracking-tight">DevOps Interview <span class="text-indigo-400">2025</span></h1>
+            </div>
+            <div class="hidden md:flex space-x-6 text-sm font-medium">
+                <button onclick="switchTab('dashboard')" class="hover:text-indigo-300 transition-colors nav-btn text-indigo-300" id="btn-dashboard">Дашборд</button>
+                <button onclick="switchTab('explorer')" class="hover:text-indigo-300 transition-colors nav-btn" id="btn-explorer">Банк Вопросов</button>
+                <button onclick="switchTab('training')" class="hover:text-indigo-300 transition-colors nav-btn" id="btn-training">Тренировка</button>
+            </div>
+            <!-- Mobile Menu Button (simplified functionality for demo) -->
+            <button class="md:hidden text-gray-300" onclick="alert('Use desktop for best view')">☰</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-6 space-y-6">
+
+        <!-- VIEW: DASHBOARD -->
+        <section id="view-dashboard" class="space-y-6 animate-fade-in">
+            <!-- Intro Text -->
+            <div class="bg-white rounded-xl p-6 card-shadow border-l-4 border-indigo-500">
+                <h2 class="text-2xl font-bold mb-2 text-slate-800">Обзор требований 2025</h2>
+                <p class="text-slate-600 mb-4">
+                    Этот интерактивный отчет содержит <strong>100 актуальных вопросов</strong> для собеседования на позицию Middle DevOps Engineer в России. 
+                    Данные сгруппированы по ключевым доменам знаний, отражающим современные требования рынка (Kubernetes, Cloud Native, IaC).
+                    Используйте графики ниже, чтобы оценить баланс навыков.
+                </p>
+                <div class="flex flex-wrap gap-4 text-sm">
+                    <span class="px-3 py-1 bg-slate-100 rounded-full text-slate-600">Total Questions: 100</span>
+                    <span class="px-3 py-1 bg-slate-100 rounded-full text-slate-600">Categories: 9</span>
+                    <span class="px-3 py-1 bg-slate-100 rounded-full text-slate-600">Market: RF/CIS</span>
+                </div>
+            </div>
+
+            <!-- Analytics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Chart 1: Category Distribution -->
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+                        <span class="mr-2">📊</span> Распределение по темам
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-500 mt-2">Доминируют Linux, K8s и Сети</p>
+                </div>
+
+                <!-- Chart 2: Difficulty Levels -->
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+                        <span class="mr-2">📈</span> Сложность вопросов
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="difficultyChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-500 mt-2">Баланс Middle уровня</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: EXPLORER (Question Bank) -->
+        <section id="view-explorer" class="hidden space-y-6">
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h2 class="text-2xl font-bold mb-4 text-slate-800">Банк Вопросов</h2>
+                <p class="text-slate-600 mb-6">
+                    Используйте фильтры для навигации. Нажмите на вопрос, чтобы увидеть ключевые темы для ответа.
+                </p>
+
+                <!-- Filters -->
+                <div class="flex flex-col md:flex-row gap-4 mb-6 sticky top-20 z-10 bg-white/95 p-2 rounded-lg border border-slate-100 shadow-sm">
+                    <select id="categoryFilter" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                        <option value="all">Все категории</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                    <select id="difficultyFilter" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                        <option value="all">Любая сложность</option>
+                        <option value="Easy">Базовый (Junior/Middle)</option>
+                        <option value="Medium">Уверенный Middle</option>
+                        <option value="Hard">Middle+/Senior</option>
+                    </select>
+                    <div class="relative w-full">
+                        <input type="text" id="searchInput" placeholder="Поиск по ключевым словам..." class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 pl-10">
+                        <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                    </div>
+                </div>
+
+                <!-- List Container -->
+                <div id="questionsList" class="space-y-4">
+                    <!-- Questions injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: TRAINING -->
+        <section id="view-training" class="hidden flex flex-col items-center justify-center py-10">
+            <div class="w-full max-w-2xl text-center space-y-8">
+                <div class="bg-white p-8 rounded-2xl card-shadow border-t-8 border-indigo-600 min-h-[300px] flex flex-col justify-center items-center relative transition-all duration-300" id="flashcard">
+                    <span id="fc-category" class="absolute top-4 right-4 text-xs font-bold uppercase tracking-wider text-slate-400">Category</span>
+                    <h3 id="fc-question" class="text-2xl font-bold text-slate-800 mb-6">Нажмите "Старт" для начала</h3>
+                    
+                    <div id="fc-answer" class="hidden text-left bg-slate-50 p-4 rounded-lg w-full border border-slate-200">
+                        <p class="text-sm font-semibold text-slate-500 mb-2">Ключевые моменты ответа:</p>
+                        <div id="fc-answer-text" class="text-slate-700 leading-relaxed font-mono text-sm"></div>
+                    </div>
+
+                    <button id="btn-show-answer" class="mt-6 text-indigo-600 font-medium hover:underline hidden" onclick="revealFlashcard()">Показать ответ</button>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="nextFlashcard()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95">
+                        Следующий вопрос 🎲
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 text-center text-slate-500 text-sm">
+            <p>&copy; 2025 DevOps Interview Helper. Generated based on industry requirements.</p>
+        </div>
+    </footer>
+
+    <!-- DATA & LOGIC -->
+    <script>
+        // --- DATA: 100 Questions ---
+        const questionsDB = [
+            // LINUX (20)
+            { id: 1, cat: "Linux", diff: "Easy", q: "Что такое inode и что будет, если они закончатся?", a: "Inode — структура данных, описывающая файл (права, владелец, timestamp). Если закончатся: нельзя создать файл, даже если есть место на диске." },
+            { id: 2, cat: "Linux", diff: "Medium", q: "Разница между процессами и потоками?", a: "Процесс: изолированное адресное пространство. Поток: легковесный процесс, общая память с родительским процессом." },
+            { id: 3, cat: "Linux", diff: "Easy", q: "Что такое Load Average?", a: "Среднее число процессов в очереди на исполнение (R) и ожидающих ввода-вывода (D) за 1, 5, 15 минут." },
+            { id: 4, cat: "Linux", diff: "Medium", q: "Как работает процесс загрузки Linux (кратко)?", a: "BIOS/UEFI -> Bootloader (Grub) -> Kernel -> Init (systemd) -> Userspace." },
+            { id: 5, cat: "Linux", diff: "Medium", q: "Что такое зомби-процесс (zombie)?", a: "Процесс, который завершился, но родитель не вызвал wait(). Он не потребляет ресурсы, кроме записи в таблице процессов." },
+            { id: 6, cat: "Linux", diff: "Easy", q: "В чем разница между Soft link и Hard link?", a: "Hard: ссылка на inode (нельзя через ФС). Soft: ссылка на путь (можно битую ссылку, можно через ФС)." },
+            { id: 7, cat: "Linux", diff: "Medium", q: "Команды для проверки свободной памяти и диска?", a: "free -h (память), df -h (диск), du -sh (размер папки)." },
+            { id: 8, cat: "Linux", diff: "Medium", q: "Что делают SIGTERM и SIGKILL?", a: "SIGTERM (15): просит процесс завершиться корректно. SIGKILL (9): убивает процесс ядром немедленно." },
+            { id: 9, cat: "Linux", diff: "Medium", q: "Что такое Swap?", a: "Место на диске для выгрузки страниц памяти, когда RAM не хватает. Влияет на производительность." },
+            { id: 10, cat: "Linux", diff: "Hard", q: "Разница между fork() и exec()?", a: "fork() создает копию процесса. exec() заменяет текущий процесс новой программой." },
+            { id: 11, cat: "Linux", diff: "Easy", q: "Права доступа 755 - расшифруйте.", a: "rwx (владелец), r-x (группа), r-x (остальные)." },
+            { id: 12, cat: "Linux", diff: "Medium", q: "Где находятся логи системы?", a: "/var/log (syslog, messages, dmesg, journalctl)." },
+            { id: 13, cat: "Linux", diff: "Medium", q: "Как посмотреть открытые порты?", a: "ss -tulpn, netstat -tulpn, lsof -i." },
+            { id: 14, cat: "Linux", diff: "Medium", q: "Что такое Sticky Bit?", a: "Для директорий: удалять файл может только владелец, даже если у других есть w." },
+            { id: 15, cat: "Linux", diff: "Hard", q: "Что такое cgroups и namespaces?", a: "Основа контейнеров. Namespaces - изоляция (PID, NET, MNT). Cgroups - лимиты ресурсов (CPU, RAM)." },
+            { id: 16, cat: "Linux", diff: "Medium", q: "Как запустить процесс в фоне?", a: "& в конце команды, nohup, screen, tmux, systemd unit." },
+            { id: 17, cat: "Linux", diff: "Medium", q: "Что такое /proc?", a: "Виртуальная ФС, интерфейс к структурам ядра (инфо о процессах, железе)." },
+            { id: 18, cat: "Linux", diff: "Medium", q: "Как найти файлы, измененные за последние 24 часа?", a: "find /path -mtime -1." },
+            { id: 19, cat: "Linux", diff: "Easy", q: "Что делает grep?", a: "Поиск текста по шаблону (RegEx)." },
+            { id: 20, cat: "Linux", diff: "Medium", q: "Разница между TCP и UDP?", a: "TCP: гарантия доставки, порядок, соединение. UDP: без гарантий, быстро, без соединения." },
+
+            // NETWORK (15)
+            { id: 21, cat: "Network", diff: "Easy", q: "Уровни модели OSI?", a: "7: App, Presentation, Session, Transport, Network, Data Link, Physical." },
+            { id: 22, cat: "Network", diff: "Medium", q: "Что происходит при вводе google.com в браузер?", a: "DNS resolve -> ARP -> TCP Handshake -> HTTP Request -> Server Process -> HTTP Response -> Render." },
+            { id: 23, cat: "Network", diff: "Medium", q: "Что такое DNS записи A, CNAME, MX?", a: "A: имя -> IP, CNAME: псевдоним имени, MX: почтовый сервер." },
+            { id: 24, cat: "Network", diff: "Medium", q: "Разница между Proxy и Reverse Proxy?", a: "Proxy: защищает клиента (скрывает IP). Reverse Proxy: защищает сервер (балансировка, SSL)." },
+            { id: 25, cat: "Network", diff: "Medium", q: "Коды состояния HTTP (2xx, 3xx, 4xx, 5xx)?", a: "200 OK, 301 Redirect, 403 Forbidden, 404 Not Found, 500 Server Error, 502 Bad Gateway." },
+            { id: 26, cat: "Network", diff: "Hard", q: "Как работает SSL/TLS Handshake?", a: "Hello -> Cert Exchange -> Key Exchange (Diffie-Hellman) -> Encrypted Session." },
+            { id: 27, cat: "Network", diff: "Medium", q: "Что такое NAT?", a: "Трансляция локальных IP в публичный (SNAT) или наоборот (DNAT/Port Forwarding)." },
+            { id: 28, cat: "Network", diff: "Medium", q: "Что такое Subnet mask?", a: "Определяет границы сети и хоста в IP адресе." },
+            { id: 29, cat: "Network", diff: "Easy", q: "Порты: 22, 80, 443, 53?", a: "SSH, HTTP, HTTPS, DNS." },
+            { id: 30, cat: "Network", diff: "Medium", q: "Инструменты для отладки сети?", a: "ping, traceroute/mtr, tcpdump/wireshark, netcat (nc), curl/wget." },
+            { id: 31, cat: "Network", diff: "Hard", q: "Что такое ARP?", a: "Address Resolution Protocol. Сопоставляет IP адрес с MAC адресом." },
+            { id: 32, cat: "Network", diff: "Medium", q: "Разница L4 и L7 балансировки?", a: "L4 (Transport): по IP/Port (TCP/UDP). L7 (App): по URL, Cookie, Headers (HTTP)." },
+            { id: 33, cat: "Network", diff: "Medium", q: "Что такое VPN?", a: "Виртуальная частная сеть. Туннелирование трафика через публичную сеть." },
+            { id: 34, cat: "Network", diff: "Medium", q: "Зачем нужен Keepalived / VRRP?", a: "Отказоустойчивость IP (Floating IP). Если мастер падает, IP переезжает на бэкап." },
+            { id: 35, cat: "Network", diff: "Medium", q: "Что такое CORS?", a: "Cross-Origin Resource Sharing. Политика браузера для доступа к ресурсам с другого домена." },
+
+            // DOCKER / K8S (25)
+            { id: 36, cat: "Container/K8s", diff: "Easy", q: "Виртуализация vs Контейнеризация?", a: "VM: свое ядро, полная ОС (тяжело). Контейнер: общее ядро хоста, изоляция пространств имен (легко)." },
+            { id: 37, cat: "Container/K8s", diff: "Medium", q: "Что такое Docker Image Layers?", a: "Изображение состоит из слоев (RO). Изменения пишутся в верхний слой (RW). Слои кэшируются." },
+            { id: 38, cat: "Container/K8s", diff: "Medium", q: "Multistage build в Docker - зачем?", a: "Уменьшение размера образа. Сборка в одном контейнере, копирование бинарника в чистый runtime образ." },
+            { id: 39, cat: "Container/K8s", diff: "Easy", q: "Основные компоненты K8s?", a: "Master (API, Scheduler, Etcd, Controller Manager), Worker (Kubelet, Kube-proxy, Container Runtime)." },
+            { id: 40, cat: "Container/K8s", diff: "Medium", q: "Что такое Pod?", a: "Минимальная единица K8s. Один или несколько контейнеров с общим IP и Volumes." },
+            { id: 41, cat: "Container/K8s", diff: "Medium", q: "Deployment vs StatefulSet?", a: "Deployment: для Stateless (веб-серверы), поды взаимозаменяемы. StatefulSet: для БД, стабильные имена, порядок, хранилище." },
+            { id: 42, cat: "Container/K8s", diff: "Medium", q: "Service Types в K8s?", a: "ClusterIP (внутри), NodePort (порт на ноде), LoadBalancer (облачный LB), ExternalName." },
+            { id: 43, cat: "Container/K8s", diff: "Medium", q: "Что такое Ingress?", a: "Правила маршрутизации внешнего HTTP/S трафика к сервисам внутри кластера (обычно Nginx)." },
+            { id: 44, cat: "Container/K8s", diff: "Hard", q: "Как работает Kube-proxy?", a: "Сетевой прокси на каждой ноде. Управляет iptables/ipvs правилами для маршрутизации трафика к сервисам." },
+            { id: 45, cat: "Container/K8s", diff: "Medium", q: "ConfigMap vs Secret?", a: "ConfigMap: нешифрованные конфиги. Secret: base64 (но не шифровано само по себе!), для паролей/ключей." },
+            { id: 46, cat: "Container/K8s", diff: "Medium", q: "Что такое PV и PVC?", a: "PV: кусок стораджа в кластере. PVC: заявка пода на сторадж." },
+            { id: 47, cat: "Container/K8s", diff: "Hard", q: "Жизненный цикл Pod?", a: "Pending -> Creating -> Running -> Succeeded/Failed. CrashLoopBackOff - ошибка старта." },
+            { id: 48, cat: "Container/K8s", diff: "Medium", q: "Liveness vs Readiness vs Startup probes?", a: "Liveness: рестарт если умер. Readiness: убрать из трафика если не готов. Startup: для долгого старта." },
+            { id: 49, cat: "Container/K8s", diff: "Medium", q: "DaemonSet - что это?", a: "Гарантирует запуск одной копии пода на каждой (или выбранных) ноде (логи, мониторинг)." },
+            { id: 50, cat: "Container/K8s", diff: "Medium", q: "Что такое Taint и Toleration?", a: "Taint: вешается на ноду (не пускать никого). Toleration: вешается на под (я могу сюда зайти)." },
+            { id: 51, cat: "Container/K8s", diff: "Hard", q: "Как работает HPA (Horizontal Pod Autoscaler)?", a: "Скейлит реплики Deployment на основе метрик (CPU/RAM/Custom) из Metrics Server." },
+            { id: 52, cat: "Container/K8s", diff: "Medium", q: "Helm - что это?", a: "Пакетный менеджер для K8s. Шаблонизация манифестов (Charts)." },
+            { id: 53, cat: "Container/K8s", diff: "Medium", q: "CRI, CNI, CSI - расшифруй.", a: "Container Runtime Interface, Container Network Interface, Container Storage Interface. Абстракции плагинов." },
+            { id: 54, cat: "Container/K8s", diff: "Easy", q: "Команды: logs, exec, describe?", a: "logs - логи контейнера, exec - зайти внутрь, describe - подробная инфо об объекте." },
+            { id: 55, cat: "Container/K8s", diff: "Hard", q: "Что такое Operator pattern?", a: "Расширение K8s. CRD (Custom Resource) + Controller. Автоматизация сложной логики (например, бэкап БД)." },
+            { id: 56, cat: "Container/K8s", diff: "Medium", q: "ENTRYPOINT vs CMD?", a: "ENTRYPOINT: исполняемый файл, сложно переопределить. CMD: аргументы по умолчанию, легко переопределить." },
+            { id: 57, cat: "Container/K8s", diff: "Easy", q: "Docker volume vs Bind mount?", a: "Volume: управляется докером (/var/lib/docker). Bind: любая папка хоста." },
+            { id: 58, cat: "Container/K8s", diff: "Medium", q: "Отличие COPY от ADD в Dockerfile?", a: "ADD умеет распаковывать tar и качать URL. COPY просто копирует файлы (предпочтительнее)." },
+            { id: 59, cat: "Container/K8s", diff: "Medium", q: "Role vs ClusterRole?", a: "Role: права в namespace. ClusterRole: права на весь кластер." },
+            { id: 60, cat: "Container/K8s", diff: "Medium", q: "Network Policies - зачем?", a: "Файрвол внутри K8s. Разрешение/запрет трафика между подами." },
+
+            // CI/CD (10)
+            { id: 61, cat: "CI/CD", diff: "Easy", q: "Что такое CI и CD?", a: "CI: Continuous Integration (сборка, тесты). CD: Continuous Delivery (деплой на тест)/Deployment (деплой на прод)." },
+            { id: 62, cat: "CI/CD", diff: "Medium", q: "GitLab CI: stages, jobs, artifacts?", a: "Stages: порядок выполнения. Jobs: задачи в stage. Artifacts: файлы, передаваемые между job." },
+            { id: 63, cat: "CI/CD", diff: "Medium", q: "Стратегии деплоя: Blue/Green vs Canary?", a: "Blue/Green: две версии, переключение трафика мгновенно. Canary: малый % трафика на новую версию." },
+            { id: 64, cat: "CI/CD", diff: "Medium", q: "Что такое Git Flow?", a: "Модель ветвления: master (prod), develop, feature/*, release/*, hotfix/*." },
+            { id: 65, cat: "CI/CD", diff: "Easy", q: "git rebase vs merge?", a: "Merge: сохраняет историю, создает commit слияния. Rebase: переписывает историю, линейный граф." },
+            { id: 66, cat: "CI/CD", diff: "Medium", q: "Что такое Runner (Gitlab/Github)?", a: "Агент, который выполняет Job-ы пайплайна (Shell, Docker executor)." },
+            { id: 67, cat: "CI/CD", diff: "Medium", q: "Зачем нужен Docker-in-Docker (dind)?", a: "Чтобы собирать Docker образы внутри Docker контейнера в CI пайплайне." },
+            { id: 68, cat: "CI/CD", diff: "Hard", q: "GitOps - принцип?", a: "Инфраструктура и состояние приложений описаны в Git. Агент (ArgoCD) синхронизирует кластер с Git." },
+            { id: 69, cat: "CI/CD", diff: "Easy", q: "Как откатить коммит в git?", a: "git revert (создает новый коммит отмены), git reset (опасно, стирает историю)." },
+            { id: 70, cat: "CI/CD", diff: "Medium", q: "Секреты в CI/CD - как хранить?", a: "GitLab Variables (Masked), Hashicorp Vault, Cloud Secrets." },
+
+            // IaC (10)
+            { id: 71, cat: "IaC", diff: "Medium", q: "Terraform vs Ansible?", a: "Terraform: Provisioning (создание инфры), декларативный, State. Ansible: CM (настройка внутри), императивный/декларативный, без State." },
+            { id: 72, cat: "IaC", diff: "Medium", q: "Что такое Terraform State?", a: "JSON файл, хранящий соответствие ресурсов реального мира и конфигурации. Нужен Remote State (S3 + DynamoDB Lock)." },
+            { id: 73, cat: "IaC", diff: "Easy", q: "Ansible: Playbook, Role, Inventory?", a: "Playbook: список задач (YAML). Role: переиспользуемый пакет задач. Inventory: список хостов." },
+            { id: 74, cat: "IaC", diff: "Medium", q: "Idempotency (Идемпотентность) - это?", a: "Повторный запуск операции не меняет результат, если состояние уже достигнуто." },
+            { id: 75, cat: "IaC", diff: "Medium", q: "Terraform: count vs for_each?", a: "count: создает список (плохо при удалении из середины). for_each: создает map (стабильнее)." },
+            { id: 76, cat: "IaC", diff: "Medium", q: "Ansible: push vs pull?", a: "По умолчанию Push (ssh). Можно настроить Pull (ansible-pull по крону)." },
+            { id: 77, cat: "IaC", diff: "Hard", q: "Terraform Plan vs Apply?", a: "Plan: показывает, что будет сделано (dry-run). Apply: вносит изменения." },
+            { id: 78, cat: "IaC", diff: "Medium", q: "Как передать переменные в Ansible?", a: "group_vars, host_vars, -e (extra vars), факты." },
+            { id: 79, cat: "IaC", diff: "Medium", q: "Модули Terraform?", a: "Контейнеры для множества ресурсов, используются для переиспользования кода." },
+            { id: 80, cat: "IaC", diff: "Hard", q: "Как бороться с Drift в Terraform?", a: "Регулярный plan, запрет ручных изменений, Drift detection tools." },
+
+            // MONITORING / LOGGING (10)
+            { id: 81, cat: "Monitoring", diff: "Medium", q: "Push vs Pull модель мониторинга?", a: "Pull (Prometheus): сервер забирает метрики. Push (Zabbix/Influx): агент шлет метрики." },
+            { id: 82, cat: "Monitoring", diff: "Medium", q: "Типы метрик Prometheus?", a: "Counter (только растет), Gauge (вверх/вниз), Histogram, Summary." },
+            { id: 83, cat: "Monitoring", diff: "Medium", q: "ELK Stack - компоненты?", a: "Elasticsearch (хранение/поиск), Logstash (процессинг), Kibana (визуализация). + Beats (агенты)." },
+            { id: 84, cat: "Monitoring", diff: "Medium", q: "Golden Signals (SRE)?", a: "Latency, Traffic, Errors, Saturation." },
+            { id: 85, cat: "Monitoring", diff: "Easy", q: "Grafana vs Prometheus?", a: "Prometheus собирает и хранит. Grafana визуализирует (рисует дашборды)." },
+            { id: 86, cat: "Monitoring", diff: "Hard", q: "Tracing (Jaeger/Zipkin) - зачем?", a: "Для отслеживания пути запроса через микросервисы. Поиск узких мест." },
+            { id: 87, cat: "Monitoring", diff: "Medium", q: "Alertmanager - функции?", a: "Дедупликация, группировка и маршрутизация алертов (Slack, Email, PagerDuty)." },
+            { id: 88, cat: "Monitoring", diff: "Medium", q: "Что такое node_exporter?", a: "Агент Prometheus для сбора метрик Linux хоста (CPU, RAM, Disk)." },
+            { id: 89, cat: "Monitoring", diff: "Medium", q: "Blackbox monitoring?", a: "Проверка снаружи (HTTP check, ping). Whitebox - метрики изнутри приложения." },
+            { id: 90, cat: "Monitoring", diff: "Easy", q: "Log rotation?", a: "Ротация логов (удаление старых, архивация), чтобы не забить диск." },
+
+            // DB & GENERAL (10)
+            { id: 91, cat: "Databases", diff: "Medium", q: "SQL vs NoSQL (примеры)?", a: "SQL (Postgres, MySQL) - схемы, связи, ACID. NoSQL (Mongo, Redis) - гибкость, скорость, масштабируемость." },
+            { id: 92, cat: "Databases", diff: "Medium", q: "Репликация vs Шардинг?", a: "Репликация: копия данных (чтение, отказоустойчивость). Шардинг: разделение данных по узлам (запись)." },
+            { id: 93, cat: "Databases", diff: "Medium", q: "ACID - это?", a: "Atomicity, Consistency, Isolation, Durability (свойства транзакций)." },
+            { id: 94, cat: "Databases", diff: "Medium", q: "Redis - кейсы использования?", a: "Кэширование, сессии, очереди сообщений, Pub/Sub." },
+            { id: 95, cat: "Databases", diff: "Hard", q: "CAP теорема?", a: "Consistency, Availability, Partition tolerance. Можно выбрать только 2 из 3." },
+            { id: 96, cat: "General", diff: "Easy", q: "Soft Skills для DevOps?", a: "Коммуникация, умение объяснять, ответственность, работа в команде." },
+            { id: 97, cat: "General", diff: "Medium", q: "Что такое 12 Factor App?", a: "Методология разработки SaaS (Codebase, Config, Backing services, Build-Release-Run...)." },
+            { id: 98, cat: "General", diff: "Medium", q: "SLA, SLO, SLI?", a: "SLA: контракт с клиентом. SLO: внутренняя цель. SLI: конкретная метрика." },
+            { id: 99, cat: "General", diff: "Easy", q: "Agile/Scrum - роль DevOps?", a: "Ускорение поставки, устранение барьеров между Dev и Ops." },
+            { id: 100, cat: "General", diff: "Hard", q: "Микросервисы vs Монолит?", a: "Монолит: простота, но сложно скейлить. Микросервисы: гибкость, но сложность в сети/деплое." }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentTab = 'dashboard';
+        let filterCategory = 'all';
+        let filterDifficulty = 'all';
+        let filterSearch = '';
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+            renderCategoryOptions();
+            renderQuestions();
+            
+            // Event Listeners
+            document.getElementById('categoryFilter').addEventListener('change', (e) => {
+                filterCategory = e.target.value;
+                renderQuestions();
+            });
+            document.getElementById('difficultyFilter').addEventListener('change', (e) => {
+                filterDifficulty = e.target.value;
+                renderQuestions();
+            });
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                filterSearch = e.target.value.toLowerCase();
+                renderQuestions();
+            });
+        });
+
+        // --- NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            // Hide all views
+            ['dashboard', 'explorer', 'training'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`btn-${t}`).classList.remove('text-indigo-400', 'font-bold');
+                document.getElementById(`btn-${t}`).classList.add('text-indigo-300');
+            });
+
+            // Show selected
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.getElementById(`btn-${tabId}`).classList.add('text-indigo-400', 'font-bold');
+            document.getElementById(`btn-${tabId}`).classList.remove('text-indigo-300');
+            
+            currentTab = tabId;
+        }
+
+        // --- DASHBOARD CHARTS ---
+        function initDashboard() {
+            // Process Data
+            const catCount = {};
+            const diffCount = { Easy: 0, Medium: 0, Hard: 0 };
+
+            questionsDB.forEach(q => {
+                catCount[q.cat] = (catCount[q.cat] || 0) + 1;
+                diffCount[q.diff] = (diffCount[q.diff] || 0) + 1;
+            });
+
+            // Chart 1: Categories
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catCount),
+                    datasets: [{
+                        data: Object.values(catCount),
+                        backgroundColor: [
+                            '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', 
+                            '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#64748b'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Chart 2: Difficulty
+            const ctxDiff = document.getElementById('difficultyChart').getContext('2d');
+            new Chart(ctxDiff, {
+                type: 'bar',
+                data: {
+                    labels: ['Базовый (Easy)', 'Уверенный (Medium)', 'Сложный (Hard)'],
+                    datasets: [{
+                        label: 'Количество вопросов',
+                        data: [diffCount.Easy, diffCount.Medium, diffCount.Hard],
+                        backgroundColor: ['#dcfce7', '#e0f2fe', '#fee2e2'],
+                        borderColor: ['#166534', '#075985', '#991b1b'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- EXPLORER LOGIC ---
+        function renderCategoryOptions() {
+            const cats = [...new Set(questionsDB.map(q => q.cat))];
+            const select = document.getElementById('categoryFilter');
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.innerText = c;
+                select.appendChild(opt);
+            });
+        }
+
+        function getCategoryIcon(cat) {
+            const map = {
+                'Linux': '🐧', 'Network': '🌐', 'Container/K8s': '🐳', 'CI/CD': '🚀',
+                'IaC': '🏗️', 'Monitoring': '📊', 'Databases': '💾', 'General': '🧠'
+            };
+            return map[cat] || '📝';
+        }
+
+        function getDiffBadge(diff) {
+            const cls = diff === 'Easy' ? 'badge-easy' : diff === 'Medium' ? 'badge-medium' : 'badge-hard';
+            return `<span class="text-xs px-2 py-1 rounded-full font-semibold ${cls}">${diff}</span>`;
+        }
+
+        function renderQuestions() {
+            const list = document.getElementById('questionsList');
+            list.innerHTML = '';
+
+            const filtered = questionsDB.filter(q => {
+                const matchCat = filterCategory === 'all' || q.cat === filterCategory;
+                const matchDiff = filterDifficulty === 'all' || q.diff === filterDifficulty;
+                const matchSearch = q.q.toLowerCase().includes(filterSearch) || q.a.toLowerCase().includes(filterSearch);
+                return matchCat && matchDiff && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-500 py-10">Ничего не найдено 😔</div>';
+                return;
+            }
+
+            filtered.forEach(q => {
+                const el = document.createElement('div');
+                el.className = 'bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer';
+                el.onclick = (e) => {
+                    // Prevent toggle if clicking links or buttons (if added later)
+                    toggleAnswer(q.id);
+                };
+
+                el.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">${getCategoryIcon(q.cat)}</span>
+                            <span class="text-xs font-bold uppercase text-slate-400 tracking-wide">${q.cat}</span>
+                        </div>
+                        ${getDiffBadge(q.diff)}
+                    </div>
+                    <h3 class="font-semibold text-slate-800 text-lg mb-2">#${q.id}. ${q.q}</h3>
+                    <div id="ans-${q.id}" class="answer-hidden mt-3 pt-3 border-t border-slate-100">
+                        <p class="text-slate-600 text-sm font-mono bg-slate-50 p-3 rounded">💡 ${q.a}</p>
+                    </div>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function toggleAnswer(id) {
+            const el = document.getElementById(`ans-${id}`);
+            if (el.classList.contains('answer-hidden')) {
+                el.classList.remove('answer-hidden');
+                el.classList.add('answer-visible');
+            } else {
+                el.classList.add('answer-hidden');
+                el.classList.remove('answer-visible');
+            }
+        }
+
+        // --- TRAINING LOGIC ---
+        function nextFlashcard() {
+            const random = questionsDB[Math.floor(Math.random() * questionsDB.length)];
+            
+            // Hide previous answer
+            document.getElementById('fc-answer').classList.add('hidden');
+            document.getElementById('btn-show-answer').classList.remove('hidden');
+            
+            // Set content
+            document.getElementById('fc-category').innerText = `${getCategoryIcon(random.cat)} ${random.cat} | ${random.diff}`;
+            document.getElementById('fc-question').innerText = random.q;
+            document.getElementById('fc-answer-text').innerText = random.a;
+            
+            // Animation reset
+            const card = document.getElementById('flashcard');
+            card.classList.remove('animate-fade-in');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('animate-fade-in');
+        }
+
+        function revealFlashcard() {
+            document.getElementById('fc-answer').classList.remove('hidden');
+            document.getElementById('btn-show-answer').classList.add('hidden');
+        }
+
+    </script>
+</body>
+</html>
